@@ -1,8 +1,16 @@
 package com.example.clock1041;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Movie;
+import android.os.AsyncTask;
+import android.util.Log;
 import android.view.View;
 
 public class GifView extends View {
@@ -13,8 +21,40 @@ public class GifView extends View {
 		super(context);
 		setFocusable(true);
 
+		// リソースから設定
 		java.io.InputStream is = this.getResources().openRawResource(R.drawable.toyoi);
 		mMovie = Movie.decodeStream(is);
+
+		// ネットから取得
+		new AsyncTask<String, Integer, Movie>(){
+			@Override
+			protected Movie doInBackground(String... params) {
+				Movie movie = null;
+				String url = "http://38.media.tumblr.com/063481f87ba3058c8bb235148df090b9/tumblr_nb8zykBVPC1qze3hdo1_r1_500.gif";
+				DefaultHttpClient client = new DefaultHttpClient();
+				try{
+					HttpGet request = new HttpGet(url);
+					HttpResponse response = client.execute(request);
+					if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
+						byte[] data = EntityUtils.toByteArray(response.getEntity());
+						movie = Movie.decodeByteArray(data, 0, data.length);
+					}
+				}
+				catch(Exception ex){
+					Log.w("test", ex.toString());
+				}
+				return movie;
+			}
+
+			@Override
+			protected void onPostExecute(Movie result) {
+				// TODO Auto-generated method stub
+				// super.onPostExecute(result);
+				if(result != null){
+					mMovie = result;
+				}
+			}
+		}.execute("");
 	}
 
 	@Override
